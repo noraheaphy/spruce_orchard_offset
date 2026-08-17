@@ -1,5 +1,5 @@
 # Script to model genomic variation with gradient forest to calculate raw genomic offsets as described in 
-# Lachmuth et al. (2023).
+# Lachmuth et al. (2024).
 # Code originally written by Susanne Lachmuth, UMD, 2020-2023
 # Code last edited by Nora Heaphy, UVM, 17 Aug 2026.
 
