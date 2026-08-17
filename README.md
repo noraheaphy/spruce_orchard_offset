@@ -1,2 +1,2 @@
-# spruce_orchard_offset
-scripts and data to reproduce analyses in spruce orchard genomic offset paper
+# Spruce orchard genomic offset paper
+Scripts and data to reproduce analyses in spruce orchard genomic offset paper
