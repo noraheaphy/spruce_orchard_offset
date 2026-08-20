@@ -1,12 +1,12 @@
 # Spruce orchard genomic offset paper
-Scripts and data to reproduce analyses in spruce orchard genomic offset paper
+Scripts and data to reproduce analyses in spruce orchard genomic offset paper.
 
 **Data**
-- `clim_sprucePops.csv` --
-- `snpScores_sprucePops.csv` --
-- `currClim_sprucePres_1960_1990.csv` --
-- `futClim_2071_SSP245.csv.zip` -- 
-- `US_states.shp` -- 
+- `clim_sprucePops.csv` -- 11 climate variables (1961-1990) for 64 sampled red spruce populations
+- `snpScores_sprucePops.csv` -- allele frequencies of 240 candidate SNPs for 64 sampled red spruce populations
+- `currClim_sprucePres_1960_1990.csv` -- 11 climate variables (1961-1990) for all geographic grid cells (2.5 arc-min) with red spruce presences (8821 lat/lons)
+- `futClim_2071_SSP245.csv.zip` -- 11 climate variables (2071-2100, SSP2-45) for all geographic grid cells (2.5 arc-min) within study area
+- `US_states.shp` -- shapefiles for US states for clipping presences to study area
 
 **Scripts**
 - `01_rawGenomicOffsets.R` —- uses gradient forest modeling to calculate raw genomic offsets, both spatial (between all current red spruce presences) and spatiotemporal (between current donors and future recipient sites)
