@@ -1,7 +1,7 @@
 # Script to model genomic variation with gradient forest to calculate raw genomic offsets as described in 
 # Lachmuth et al. (2024).
 # Code originally written by Susanne Lachmuth, UMD, 2020-2023
-# Code last edited by Nora Heaphy, UVM, 17 Aug 2026.
+# Code last edited by Nora Heaphy, UVM, 11 Nov 2026.
 
 # load packages
 # note that extendedForest and gradientForest need to be manually repaired in the package directory after
@@ -53,14 +53,55 @@ clim_sprucePres_xy <- fread("data/currClim_sprucePres_1960_1990.csv", stringsAsF
 clim_sprucePres <- clim_sprucePres_xy[,-c(1:3)]
 
 # transform climate data using gradient forest model predictions
-transClim <- predict(gfMod, clim_sprucePres)
+transClim_xy <- predict(gfMod, clim_sprucePres)
 
 # put back in xy coordinates
-transClim$x <- clim_sprucePres_xy$x
-transClim$y <- clim_sprucePres_xy$y
-transClim$cellindex <- clim_sprucePres_xy$cellindex
+transClim_xy$x <- clim_sprucePres_xy$x
+transClim_xy$y <- clim_sprucePres_xy$y
+transClim_xy$cellindex <- clim_sprucePres_xy$cellindex
 
-#### change extent ####
+# subset to just climate data
+transClim <- transClim_xy %>% dplyr::select(CMD:PET)
+
+
+# CONTEMPORARY SPATIAL OFFSETS --------------------------------------------
+# all this only needs to be done once here to generate ECDF for standardizing spatial offsets
+# for different future time periods and climate projections, start from spatio-temporal offsets section
+
+# settings
+nCores <- 50
+nBreak <- 100
+
+# run in parallel
+breakIt <- split(1:nrow(transClim), cut(1:nrow(transClim), nCores, labels = FALSE))
+
+cl <- parallel::makeCluster(nCores)
+doParallel::registerDoParallel(cl)
+
+# calculate pairwise offset matrix between all presences under current climates
+spatOffset <- foreach(i = 1:length(breakIt), .packages = c("fields")) %dopar%{
+  mat <- rdist(transClim[breakIt[[i]],], transClim)
+  return(mat)
+}
+
+stopCluster(cl)
+
+# reformat
+spatOffset_list <- do.call(rbind, spatOffset)
+spatOffset_df <- as.data.frame(spatOffset_list)
+colnames(spatOffset_df) <- rownames(transClim)
+spatOffset_mat <- as.matrix(spatOffset_df)
+spatOffset_lon <- reshape2::melt(spatOffset_mat)[reshape2::melt(lower.tri(spatOffset_mat))$value,]
+
+# get empirical cumulative density function
+ecdfSpatOffset <- ecdf(spatOffset_lon$value)
+
+# save for standardized offsets script
+save(spatOffset_df, file = "results/spatOffset_df.RData")
+save(ecdfSpatOffset, file = "results/ecdfSpatOffset.RData")
+
+
+# CHANGE EXTENT --------------------------------------------
 # crop extent to just study area: PA, NY, NJ, ME, NH, VT, MA, CT, RI
 
 # read in US states shapefiles (NAD83)
@@ -72,7 +113,7 @@ study_states <- states %>% filter(NAME %in% c("Maine", "New Hampshire", "Vermont
                                               "Rhode Island"))
 
 # convert transClim into spatial points
-transClim_pts <- st_as_sf(transClim, coords = c("x", "y"), crs = 4326)
+transClim_pts <- st_as_sf(transClim_xy, coords = c("x", "y"), crs = 4326)
 
 # re-project points to NAD83 to match US states CRS
 transClim_pts_proj <- st_transform(transClim_pts, "+proj=longlat +datum=NAD83")
@@ -98,8 +139,7 @@ clim_sprucePres_xy <- clim_sprucePres_reduced %>% st_drop_geometry() %>%
 write.csv(clim_sprucePres_xy, "data/clim_sprucePres_reduced.csv", row.names = F)
 
 # CONTEMPORARY SPATIAL OFFSETS --------------------------------------------
-# all this only needs to be done once
-# for different future time periods and climate projections, start from spatio-temporal offsets section
+# re-calculate contemporary spatial offset just for points in northeastern USA
 
 # settings
 nCores <- 50
@@ -123,17 +163,11 @@ stopCluster(cl)
 spatOffset_list <- do.call(rbind, spatOffset)
 spatOffset_df <- as.data.frame(spatOffset_list)
 colnames(spatOffset_df) <- rownames(transClim)
-
-# melt into long format
 spatOffset_mat <- as.matrix(spatOffset_df)
 spatOffset_lon <- reshape2::melt(spatOffset_mat)[reshape2::melt(lower.tri(spatOffset_mat))$value,]
 
-# get empirical cumulative density function
-ecdfSpatOffset <- ecdf(spatOffset_lon$value)
-
-# save for standardized offsets script
-save(spatOffset_df, file = "results/spatOffset_df.RData")
-save(ecdfSpatOffset, file = "results/ecdfSpatOffset.RData")
+# save for Bristol offsets
+save(spatOffset_df, file = "results/spatOffset_studyArea_df.RData")
 
 
 # SPATIO-TEMPORAL OFFSETS -------------------------------------------------
