@@ -7,6 +7,7 @@ Scripts and data to reproduce analyses in spruce orchard genomic offset paper.
 - `currClim_sprucePres_1960_1990.csv` -- 11 climate variables (1961-1990) for all geographic grid cells (2.5 arc-min) with red spruce presences (8821 lat/lons)
 - `futClim_2071_SSP245.csv.zip` -- 11 climate variables (2071-2100, SSP2-45) for all geographic grid cells (2.5 arc-min) within study area
 - `US_states.shp` -- shapefiles for US states for clipping presences to study area
+- `scion_collection_localities_spring2024.csv` and `scion_collection_localities_spring2025.csv` -- metadata (tree ID, lat, long, etc.) for 90 scion collections from 2024 and 2025 collecting trips respectively 
 
 **Scripts**
 - `01_rawGenomicOffsets.R` —- uses gradient forest modeling to calculate raw genomic offsets, both spatial (between all current red spruce presences) and spatiotemporal (between current donors and future recipient sites)
